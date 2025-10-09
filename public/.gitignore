@@ -1,0 +1,13 @@
+# node
+node_modules/
+npm-debug.log*
+yarn.lock
+package-lock.json
+
+# env & tokens (절대 올리지 않음!)
+.env
+tokens.json
+
+# OS
+.DS_Store
+Thumbs.db

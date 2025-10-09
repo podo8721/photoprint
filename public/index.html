@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>포도스튜디오 사진 인화 접수</title>
+  <style>
+    body {
+      font-family: "Pretendard", sans-serif;
+      background: linear-gradient(135deg, #ffe6f1, #e8f0ff, #e5fff6);
+      background-size: 400% 400%;
+      animation: gradientMove 12s ease infinite;
+      margin: 0; padding: 0;
+      display: flex; justify-content: center; align-items: flex-start;
+      min-height: 100vh;
+    }
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .container {
+      width: 95%; max-width: 500px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin: 30px 0; padding: 28px;
+      backdrop-filter: blur(10px);
+    }
+    h1 {
+      text-align: center; font-size: 24px; color: #7c4dff;
+      margin-bottom: 10px; font-weight: 800;
+    }
+    h1::before { content: "📸 "; }
+    .section { margin-top: 25px; }
+    .size-options {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    }
+    .size-btn {
+      padding: 10px 16px; border-radius: 12px; border: none;
+      background: #f0efff; cursor: pointer; font-weight: 600; color: #555;
+      transition: all 0.25s ease;
+    }
+    .size-btn.active {
+      background: linear-gradient(135deg, #a07dff, #ff92d0); color: white;
+      transform: scale(1.08); box-shadow: 0 4px 10px rgba(160,125,255,0.3);
+    }
+    input[type="file"] { display: block; margin: 15px auto; }
+    .preview {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 10px; margin-top: 10px;
+    }
+    .preview img {
+      width: 100px; height: 100px; object-fit: cover;
+      border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    .upload-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #7c4dff, #b57cff);
+      color: white; font-size: 18px; font-weight: 700;
+      border: none; border-radius: 12px; padding: 14px;
+      margin-top: 15px; cursor: pointer;
+      transition: 0.3s ease; box-shadow: 0 4px 15px rgba(124,77,255,0.35);
+      animation: glow 1.8s infinite alternate;
+    }
+    @keyframes glow {
+      from { box-shadow: 0 0 8px rgba(124,77,255,0.3); }
+      to { box-shadow: 0 0 18px rgba(255,146,208,0.6); }
+    }
+    .upload-btn:disabled { background: #ccc; cursor: not-allowed; animation: none; }
+    .progress-bar { height: 12px; background: #e0e0e0; border-radius: 10px; margin-top: 12px; overflow: hidden; }
+    .progress-fill { width: 0%; height: 100%; background: linear-gradient(135deg, #7c4dff, #ff92d0); transition: width 0.3s ease; }
+    .price { margin-top: 14px; font-size: 16px; text-align: center; font-weight: 600; color: #444; }
+    .note { text-align: center; margin-top: 10px; font-size: 13px; color: #777; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>포도스튜디오 사진 인화 접수</h1>
+
+    <div class="section">
+      <h3>1. 인화 사이즈 선택</h3>
+      <div class="size-options" id="sizeOptions">
+        <button class="size-btn active" data-size="3x5">3x5</button>
+        <button class="size-btn" data-size="4x6">4x6</button>
+        <button class="size-btn" data-size="5x7">5x7</button>
+        <button class="size-btn" data-size="6x8">6x8</button>
+        <button class="size-btn" data-size="5x7cm">5x7cm</button>
+        <button class="size-btn" data-size="여권사진">여권사진</button>
+        <button class="size-btn" data-size="민증/면허증">민증/면허증</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>2. 사진 선택하기</h3>
+      <input type="file" id="photoInput" accept="image/*" multiple />
+      <div class="preview" id="preview"></div>
+    </div>
+
+    <div class="section">
+      <h3>3. 업로드 시작</h3>
+      <div class="price" id="priceText">예상 금액: 3,000원</div>
+      <button id="uploadBtn" class="upload-btn" disabled>📤 업로드 시작</button>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="note" id="statusText">사진을 선택하면 업로드 버튼이 활성화됩니다.</div>
+    </div>
+  </div>
+
+  <script>
+    const photoInput = document.getElementById("photoInput");
+    const preview = document.getElementById("preview");
+    const uploadBtn = document.getElementById("uploadBtn");
+    const progressFill = document.getElementById("progressFill");
+    const statusText = document.getElementById("statusText");
+    const priceText = document.getElementById("priceText");
+    const sizeButtons = document.querySelectorAll(".size-btn");
+
+    let selectedFiles = [];
+    let selectedSize = "3x5";
+    let thumbArray = [];
+
+    sizeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        sizeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        selectedSize = btn.dataset.size;
+        calcPrice();
+      });
+    });
+
+    const priceTable = {
+      "3x5": 500, "4x6": 500, "5x7": 5000, "6x8": 8000,
+      "5x7cm": 1000, "여권사진": 15000, "민증/면허증": 15000
+    };
+
+    function calcPrice() {
+      let total = 0;
+      const base = 3000;
+      const count = selectedFiles.length;
+
+      if (selectedSize === "여권사진" || selectedSize === "민증/면허증") {
+        total = count * priceTable[selectedSize];
+        priceText.textContent = `예상 금액: ${total.toLocaleString()}원 (${count}장 × 15,000원)`;
+      } else {
+        const per = priceTable[selectedSize] || 0;
+        total = base + count * per;
+        priceText.textContent = `예상 금액: ${total.toLocaleString()}원 (기본 3,000 + ${count}장 × ${per.toLocaleString()})`;
+      }
+    }
+
+    photoInput.addEventListener("change", (e) => {
+      selectedFiles = Array.from(e.target.files);
+      preview.innerHTML = "";
+      thumbArray = [];
+
+      selectedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = evt => {
+          const img = document.createElement("img");
+          img.src = evt.target.result;
+          preview.appendChild(img);
+          thumbArray.push(evt.target.result);
+          localStorage.setItem("uploadedThumbs", JSON.stringify(thumbArray));
+        };
+        reader.readAsDataURL(file);
+      });
+
+      uploadBtn.disabled = selectedFiles.length === 0;
+      statusText.textContent = "📸 준비 완료! 업로드를 시작하세요.";
+      calcPrice();
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      if (selectedFiles.length === 0) return alert("사진을 선택하세요.");
+      uploadBtn.disabled = true;
+      statusText.textContent = "📤 업로드 중입니다...";
+      progressFill.style.width = "10%";
+
+      try {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          const formData = new FormData();
+          formData.append("photo", selectedFiles[i]);
+          formData.append("size", selectedSize);
+          formData.append("copies", 1);
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!res.ok) throw new Error("서버 응답 오류");
+          await res.json();
+          progressFill.style.width = `${((i + 1) / selectedFiles.length) * 100}%`;
+        }
+
+        window.location.href = `/result.html?count=${selectedFiles.length}&size=${encodeURIComponent(selectedSize)}`;
+      } catch (err) {
+        statusText.textContent = "⚠️ 오류 발생: " + err.message;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

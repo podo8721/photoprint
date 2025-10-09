@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>포도스튜디오 접수 완료</title>
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: linear-gradient(135deg, #f7f0ff, #e8f0ff);
+      color: #333;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    h2 { color: #7b1fa2; font-size: 1.8rem; margin-bottom: 10px; }
+    .result-box {
+      background: #fff; border-radius: 18px; padding: 40px 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1); display: inline-block; min-width: 340px;
+    }
+    #price-detail { margin-top: 10px; color: #444; font-size: 1.05rem; }
+    .thumb-container {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 25px;
+    }
+    .thumb {
+      width: 120px; height: 120px; border-radius: 12px; object-fit: cover;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .btns { margin-top: 35px; display: flex; justify-content: center; gap: 12px; }
+    button {
+      border: none; border-radius: 10px; font-size: 1rem; padding: 12px 22px;
+      color: white; cursor: pointer; font-weight: bold; transition: all 0.25s ease;
+    }
+    .pay-btn { background: linear-gradient(90deg, #8e24aa, #d81b60); box-shadow: 0 4px 10px rgba(216, 27, 96, 0.4); }
+    .retry-btn { background: #607d8b; }
+  </style>
+</head>
+<body>
+  <div class="result-box">
+    <h2>📸 포도스튜디오 접수 완료</h2>
+    <p id="result-text">업로드 결과를 불러오는 중...</p>
+    <p id="price-detail"></p>
+    <div id="thumb-container" class="thumb-container"></div>
+    <div class="btns">
+      <button class="pay-btn">💳 결제하기</button>
+      <button class="retry-btn" onclick="location.href='index.html'">🔁 다시 접수</button>
+    </div>
+  </div>
+
+  <script>
+    try {
+      const url = new URLSearchParams(location.search);
+      const count = parseInt(url.get('count')) || 0;
+      const size  = url.get('size') || '4x6';
+      let thumbs = JSON.parse(localStorage.getItem('uploadedThumbs') || '[]');
+
+      const priceTable = {
+        '3x5': 500, '4x6': 500, '5x7': 5000, '6x8': 8000,
+        '5x7cm': 1000, '여권사진': 15000, '민증/면허증': 15000
+      };
+
+      let total = 0, detail = '';
+      if (size === '여권사진' || size === '민증/면허증') {
+        total = count * priceTable[size];
+        detail = `${size} ${count}장 × 15,000원`;
+      } else {
+        total = 3000 + count * (priceTable[size] || 0);
+        detail = `기본 3,000원 + ${size} ${count}장 × ${(priceTable[size] || 0).toLocaleString()}원`;
+      }
+
+      document.getElementById('result-text').innerHTML = 
+        `총 <b>${count}</b>장 업로드 완료되었습니다.<br><br><b>💰 결제 금액: ${total.toLocaleString()}원</b>`;
+      document.getElementById('price-detail').innerText = `(${detail})`;
+
+      const box = document.getElementById('thumb-container');
+      thumbs.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'thumb';
+        box.appendChild(img);
+      });
+      localStorage.removeItem('uploadedThumbs');
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
+</body>
+</html>
