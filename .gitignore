@@ -1,0 +1,8 @@
+# 비밀/환경 파일
+tokens.json
+.env
+
+# 일반적으로 함께 무시하는 것들
+node_modules/
+npm-debug.log*
+.DS_Store
