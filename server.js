@@ -1,4 +1,4 @@
-// server.js — AWS S3 업로드 버전
+// server.js — AWS S3 업로드 버전 (최종 안정판)
 import express from "express";
 import multer from "multer";
 import AWS from "aws-sdk";
@@ -15,7 +15,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Multer 임시 저장 폴더
+// Multer 임시 저장 폴더 설정
 const upload = multer({ dest: "temp/" });
 
 // AWS S3 설정
