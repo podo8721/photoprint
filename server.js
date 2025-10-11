@@ -27,7 +27,7 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
-// 테스트용 기본 페이지
+// 기본 페이지
 app.get("/", (req, res) => {
   res.send(`
     <h2>📸 Podo PhotoPrint - AWS S3 Upload Server</h2>
