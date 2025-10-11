@@ -20,14 +20,14 @@ const upload = multer({ dest: "temp/" });
 
 // AWS S3 설정
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Render Secrets에 입력한 값
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // Render Secrets에 입력한 값
-  region: process.env.AWS_REGION, // ex) ap-northeast-2
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
 });
 
 const s3 = new AWS.S3();
 
-// 🔹 메인 페이지 (테스트용)
+// 테스트용 기본 페이지
 app.get("/", (req, res) => {
   res.send(`
     <h2>📸 Podo PhotoPrint - AWS S3 Upload Server</h2>
@@ -38,31 +38,23 @@ app.get("/", (req, res) => {
   `);
 });
 
-// 🔹 업로드 처리 라우트
+// 업로드 처리
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
+    if (!file) return res.status(400).json({ error: "파일이 없습니다." });
 
-    if (!file) {
-      return res.status(400).json({ error: "파일이 없습니다." });
-    }
-
-    // 업로드할 파일 경로
     const filePath = path.resolve(file.path);
     const fileStream = fs.createReadStream(filePath);
 
-    // AWS S3 업로드 파라미터
     const params = {
-      Bucket: process.env.AWS_BUCKET_NAME, // Render Secrets에 입력한 버킷 이름
+      Bucket: process.env.AWS_BUCKET_NAME,
       Key: `uploads/${Date.now()}_${file.originalname}`,
       Body: fileStream,
       ContentType: file.mimetype,
     };
 
-    // 업로드 실행
     const result = await s3.upload(params).promise();
-
-    // 임시 파일 삭제
     fs.unlinkSync(filePath);
 
     console.log("✅ 업로드 성공:", result.Location);
@@ -73,7 +65,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
   }
 });
 
-// 🔹 서버 실행
+// 서버 실행
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
 });
