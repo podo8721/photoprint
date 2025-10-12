@@ -1,14 +1,14 @@
-// ✅ server.js — Podo Photoprint AWS S3 Upload Server (Final Version)
+// ✅ server.js — Podo Photoprint AWS S3 Upload Server (CommonJS version)
 // 작성자: Jaeyoung Choi
-// 배포환경: Render + AWS S3 (ap-northeast-2)
-// ✅ 2025-10-12 기준 완성본
+// Render 배포 안정화 버전 (2025-10-12 최종)
+// 문제 해결: ESM → CommonJS 전환
 
-import express from "express";
-import multer from "multer";
-import AWS from "aws-sdk";
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+const express = require("express");
+const multer = require("multer");
+const AWS = require("aws-sdk");
+const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 // ✅ 환경변수 로드
 dotenv.config();
@@ -20,19 +20,19 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ Multer 임시 폴더 지정
+// ✅ Multer 임시폴더 설정
 const upload = multer({ dest: "temp/" });
 
-// ✅ AWS S3 환경설정
+// ✅ AWS S3 설정
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,       // Render Secrets에 저장된 값
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION,
 });
 
 const s3 = new AWS.S3();
 
-// ✅ 기본 페이지 (업로드 테스트용)
+// ✅ 기본 페이지 (테스트용)
 app.get("/", (req, res) => {
   res.send(`
     <h2>📸 Podo Photoprint - AWS S3 Upload Server</h2>
@@ -43,7 +43,7 @@ app.get("/", (req, res) => {
   `);
 });
 
-// ✅ 업로드 처리 엔드포인트
+// ✅ 파일 업로드 처리
 app.post("/upload", upload.single("file"), async (req, res) => {
   try {
     const file = req.file;
@@ -59,11 +59,9 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       ContentType: file.mimetype,
     };
 
-    // ✅ S3 업로드 실행
     const result = await s3.upload(params).promise();
 
-    // ✅ 임시파일 삭제
-    fs.unlinkSync(filePath);
+    fs.unlinkSync(filePath); // 임시 파일 삭제
 
     console.log("✅ 업로드 성공:", result.Location);
     res.json({
@@ -71,12 +69,12 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       url: result.Location,
     });
   } catch (err) {
-    console.error("❌ 업로드 중 오류 발생:", err);
+    console.error("❌ 업로드 중 오류:", err);
     res.status(500).json({ error: "서버 오류: " + err.message });
   }
 });
 
-// ✅ 서버 실행
+// ✅ 서버 시작
 app.listen(port, () => {
   console.log(`🚀 Podo Photoprint AWS Server 실행 중 (포트: ${port})`);
 });
